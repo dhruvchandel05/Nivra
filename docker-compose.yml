@@ -1,0 +1,26 @@
+services:
+  server:
+    build: ./server
+    container_name: compuschat-server
+    restart: unless-stopped
+    # Secrets (DATABASE_URL, GEMINI_API_KEY, SESSION_SECRET, ...) come from server/.env
+    env_file: ./server/.env
+    environment:
+      PORT: 5000
+      # Browser origin of the client container (see CLIENT_PORT in root .env)
+      CLIENT_ORIGIN: http://localhost:${CLIENT_PORT:-8080}
+      NODE_ENV: ${NODE_ENV:-development}
+    expose:
+      - "5000"
+
+  client:
+    build:
+      context: ./client
+      args:
+        VITE_API_BASE_URL: /api
+    container_name: compuschat-client
+    restart: unless-stopped
+    depends_on:
+      - server
+    ports:
+      - "${CLIENT_PORT:-8080}:80"
